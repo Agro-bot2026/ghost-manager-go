@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -44,14 +45,43 @@ func limiteTexto(gb float64) string {
 	return verde + fmtGB(gb) + nc
 }
 
+// versionPortero: busca el binario del portero donde esté instalado de verdad
+// (en el server de desarrollo está en /root/ghost-go, en un VPS nuevo en /usr/local/bin)
+func binPortero() string {
+	var candidatos []string
+	if v := os.Getenv("GM_PORTERO_BIN"); v != "" {
+		candidatos = append(candidatos, v)
+	}
+	candidatos = append(candidatos, "/usr/local/bin/ghostprox")
+	if p, err := exec.LookPath("ghostprox"); err == nil {
+		candidatos = append(candidatos, p)
+	}
+	candidatos = append(candidatos, RutaGhostprox)
+	for _, c := range candidatos {
+		if c == "" {
+			continue
+		}
+		if st, err := os.Stat(c); err == nil && !st.IsDir() {
+			return c
+		}
+	}
+	return ""
+}
+
 func versionPortero() string {
-	out := correr(RutaGhostprox, "--version")
-	if out == "" {
+	bin := binPortero()
+	if bin == "" {
 		return "(no encontrado)"
 	}
+	out := correr(bin, "--version")
+	if out == "" {
+		return "(no responde)"
+	}
 	partes := strings.Fields(out)
-	if len(partes) >= 2 {
-		return partes[1]
+	for _, p := range partes {
+		if strings.HasPrefix(p, "v") && strings.Contains(p, ".") {
+			return p
+		}
 	}
 	return out
 }
