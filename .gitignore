@@ -1,8 +1,7 @@
 # binarios y salidas de compilación
 *.build
-ghostprox
-ghost-manager
-ghostprox.bin
+/ghostprox/ghostprox
+/ghost-manager/ghost-manager
 
 # bases de datos y respaldos (NUNCA se publican)
 *.db
